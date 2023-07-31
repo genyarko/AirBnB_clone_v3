@@ -1,13 +1,12 @@
-#!/usr/bin/python
-""" Holds class User"""
+#!/usr/bin/python3
+""" holds class User"""
 import models
 from models.base_model import BaseModel, Base
-import hashlib
 from os import getenv
 import sqlalchemy
 from sqlalchemy import Column, String
 from sqlalchemy.orm import relationship
-
+import hashlib
 
 class User(BaseModel, Base):
     """Representation of a user """
@@ -36,21 +35,11 @@ class User(BaseModel, Base):
 
     def to_dict(self, include_password=False):
         # Call the parent to_dict method and exclude password if needed
-        dictionary = super().to_dict(include_password=include_password)
+        dictionary = super().to_dict()
+        if not include_password and 'password' in dictionary:
+            del dictionary['password']
         return dictionary
 
     def __init__(self, *args, **kwargs):
         """initializes user"""
         super().__init__(*args, **kwargs)
-        # Hash the password if it exists
-        if 'password' in kwargs:
-            self.password = kwargs['password']
-        # Hash the password if it is being updated
-        elif '_password' in kwargs:
-            self.password = kwargs['_password']
-
-        # Hash the password before storing it in the database or file
-        if getenv('HBNB_TYPE_STORAGE') == 'db':
-            self._password = hashlib.md5(self._password.encode()).hexdigest()
-        else:
-            self.password = self._password
