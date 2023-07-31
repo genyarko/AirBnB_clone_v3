@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 """
-Places-Amenities view for API.
+Place-Amenity view for API.
 """
 
 from flask import abort, jsonify
@@ -11,8 +11,11 @@ from models.place import Place
 from models.amenity import Amenity
 
 
-@app_views.route('/places/<place_id>/amenities', methods=['GET'], strict_slashes=False)
-def get_place_amenities(place_id):
+@app_views.route(
+    '/places/<place_id>/amenities',
+    methods=['GET'],
+    strict_slashes=False)
+def get_amenities(place_id):
     """Returns JSON of all Amenity objects linked to a Place"""
     place = storage.get('Place', place_id)
     if not place:
@@ -24,13 +27,14 @@ def get_place_amenities(place_id):
 @app_views.route(
     '/places/<place_id>/amenities/<amenity_id>',
     methods=['DELETE'],
-    strict_slashes=False
-)
-def delete_place_amenity(place_id, amenity_id):
-    """Deletes an Amenity object from a Place"""
+    strict_slashes=False)
+def delete_amenity(place_id, amenity_id):
+    """Deletes a link between a Place and an Amenity"""
     place = storage.get('Place', place_id)
+    if not place:
+        abort(404)
     amenity = storage.get('Amenity', amenity_id)
-    if not place or not amenity:
+    if not amenity:
         abort(404)
     if amenity not in place.amenities:
         abort(404)
@@ -42,13 +46,14 @@ def delete_place_amenity(place_id, amenity_id):
 @app_views.route(
     '/places/<place_id>/amenities/<amenity_id>',
     methods=['POST'],
-    strict_slashes=False
-)
-def link_place_amenity(place_id, amenity_id):
+    strict_slashes=False)
+def link_amenity(place_id, amenity_id):
     """Links an Amenity object to a Place"""
     place = storage.get('Place', place_id)
+    if not place:
+        abort(404)
     amenity = storage.get('Amenity', amenity_id)
-    if not place or not amenity:
+    if not amenity:
         abort(404)
     if amenity in place.amenities:
         return jsonify(amenity.to_dict()), 200
