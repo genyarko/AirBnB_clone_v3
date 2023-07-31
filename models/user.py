@@ -36,9 +36,7 @@ class User(BaseModel, Base):
 
     def to_dict(self, include_password=False):
         # Call the parent to_dict method and exclude password if needed
-        dictionary = super().to_dict()
-        if not include_password and 'password' in dictionary:
-            del dictionary['password']
+        dictionary = super().to_dict(include_password=include_password)
         return dictionary
 
     def __init__(self, *args, **kwargs):
