@@ -8,11 +8,12 @@ from models import storage, state, city
 
 
 @app_views.route('/states/<state_id>/cities', methods=['GET'], strict_slashes=False)
-def get_cities_by_state(state_id=None):
-    """Gets all cities of a state"""
+def get_cities_by_state(state_id):
+    """Gets all cities by state ID"""
     s = storage.get("State", state_id)
     if s is None:
         abort(404)
+
     cities = [c.to_dict() for c in s.cities]
     return jsonify(cities)
 
@@ -38,7 +39,7 @@ def delete_city(city_id=None):
 
 
 @app_views.route('/states/<state_id>/cities', methods=['POST'], strict_slashes=False)
-def create_city(state_id=None):
+def create_city(state_id):
     """Create a city"""
     s = storage.get("State", state_id)
     if s is None:
@@ -50,7 +51,7 @@ def create_city(state_id=None):
     if 'name' not in data:
         abort(400, "Missing name")
 
-    new_city = city.City(state_id=s.id, **data)
+    new_city = city.City(state_id=state_id, **data)
     storage.new(new_city)
     storage.save()
     return jsonify(new_city.to_dict()), 201
@@ -74,4 +75,3 @@ def update_city(city_id=None):
 
     storage.save()
     return jsonify(c.to_dict()), 200
-
