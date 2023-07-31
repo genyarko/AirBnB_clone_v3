@@ -209,5 +209,4 @@ class TestBaseModel(unittest.TestCase):
         self.assertIn("custom_attr", inst_dict)
         self.assertEqual(inst_dict["custom_attr"], "test_custom")
 
-if __name__ == '__main__':
-    unittest.main()
+
