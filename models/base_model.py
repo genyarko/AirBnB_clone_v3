@@ -70,6 +70,9 @@ class BaseModel:
         new_dict.pop('_sa_instance_state', None)
         if not password:
             new_dict.pop('password', None)
+
+        if include_password or models.storage_t == 'db':
+            dictionary['password'] = self.password
         return new_dict
 
     def delete(self):
