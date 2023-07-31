@@ -2,12 +2,12 @@
 """Places"""
 from api.v1.views import app_views
 from flask import request, jsonify, abort
-from models import storage, place
+from models import storage, place, state, city, amenity
 
 
 @app_views.route('/cities/<city_id>/places', methods=['GET'],
                  strict_slashes=False)
-def getallplaces(city_id=None):
+def get_all_places(city_id=None):
     """Gets all places"""
     if city_id is None:
         abort(404)
@@ -20,7 +20,7 @@ def getallplaces(city_id=None):
 
 
 @app_views.route('/places/<place_id>', methods=['GET'], strict_slashes=False)
-def getplaces(place_id=None):
+def get_place(place_id=None):
     """Gets a place"""
     s = storage.get("Place", place_id)
     if s is None:
@@ -31,7 +31,7 @@ def getplaces(place_id=None):
 
 @app_views.route('/places/<place_id>', methods=['DELETE'],
                  strict_slashes=False)
-def deleteplaces(place_id=None):
+def delete_place(place_id=None):
     """Deletes a place"""
     s = storage.get("Place", place_id)
     if s is None:
@@ -44,7 +44,7 @@ def deleteplaces(place_id=None):
 
 @app_views.route('/cities/<city_id>/places', methods=['POST'],
                  strict_slashes=False)
-def createplaces(city_id=None):
+def create_place(city_id=None):
     """Create a place"""
     checker = set()
     for i in storage.all("City").values():
@@ -76,7 +76,7 @@ def createplaces(city_id=None):
 
 
 @app_views.route('/places/<place_id>', methods=['PUT'], strict_slashes=False)
-def updateplaces(place_id=None):
+def update_place(place_id=None):
     """Update a place"""
     obj = storage.get("Place", place_id)
     if obj is None:
@@ -94,3 +94,40 @@ def updateplaces(place_id=None):
         storage.save()
         res = obj.to_dict()
         return jsonify(res), 200
+
+
+@app_views.route('/places_search', methods=['POST'], strict_slashes=False)
+def search_places():
+    """Searches for places based on JSON in request body"""
+    req = request.get_json()
+    if req is None:
+        abort(400, "Not a JSON")
+
+    states = req.get("states", [])
+    cities = req.get("cities", [])
+    amenities = req.get("amenities", [])
+
+    if not states and not cities and not amenities:
+        res = [p.to_dict() for p in storage.all("Place").values()]
+        return jsonify(res)
+
+    res = []
+    for s in states:
+        state_obj = storage.get("State", s)
+        if state_obj is not None:
+            for c in state_obj.cities:
+                if c.id not in cities:
+                    cities.append(c.id)
+
+    for c in cities:
+        city_obj = storage.get("City", c)
+        if city_obj is not None:
+            for p in city_obj.places:
+                if p not in res:
+                    res.append(p)
+
+    if amenities:
+        res = [p for p in res if all(a in p.amenities for a in amenities)]
+
+    res = [p.to_dict() for p in res]
+    return jsonify(res)
